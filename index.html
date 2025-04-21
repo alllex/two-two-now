@@ -34,7 +34,7 @@
       font-size: 5rem;
       font-weight: bold;
       padding: 0.5rem 1rem;
-      border-radius: 1rem;
+      border-radius: 0.5rem;
       cursor: pointer;
       transition: background-color 0.2s ease;
     }
@@ -90,6 +90,8 @@
     }
 
     function update() {
+      if (paused) return;
+
       const now = Math.floor(Date.now() / 1000);
       const id = encode(now);
       const date = new Date(now * 1000);
@@ -100,8 +102,14 @@
       document.getElementById('timestamp').textContent = formatted;
     }
 
-    document.getElementById('twoTwoId').addEventListener('click', () => {
-      const text = document.getElementById('twoTwoId').textContent;
+    let paused = false;
+    const idEl = document.getElementById('twoTwoId');
+
+    idEl.addEventListener('mouseenter', () => paused = true);
+    idEl.addEventListener('mouseleave', () => paused = false);
+
+    idEl.addEventListener('click', () => {
+      const text = idEl.textContent;
       navigator.clipboard.writeText(text).then(() => {
         const indicator = document.getElementById('copiedIndicator');
         indicator.textContent = 'Copied!';
