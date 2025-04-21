@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Two Two Now</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: white;
+      overflow: hidden;
+      height: 100%;
+      font-family: monospace;
+      color: #333;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      text-align: center;
+    }
+    .header {
+      position: absolute;
+      top: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 1rem;
+      color: #888;
+    }
+    .id {
+      font-size: 5rem;
+      font-weight: bold;
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .id:hover {
+      background-color: #f2f2f2;
+    }
+    .copied {
+      font-size: 0.8rem;
+      color: green;
+      margin-top: 0.2rem;
+      height: 1rem;
+    }
+    .timestamp {
+      font-size: 1rem;
+      color: #aaa;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">Two Two Now</div>
+  <div class="container">
+    <div class="id" id="twoTwoId" title="Click to copy">tt------</div>
+    <div class="copied" id="copiedIndicator"></div>
+    <div class="timestamp" id="timestamp">---- -- -- --:--:--</div>
+  </div>
+
+  <script>
+    const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    const BASE58_MAP = Object.fromEntries([...BASE58_ALPHABET].map((char, i) => [char, i]));
+    const T_REF_UNIX = 4102444800;
+    const BASE58_ID_LENGTH = 6;
+    const PADDING_CHAR = '0';
+
+    function toBase58(num) {
+      if (num === 0) return BASE58_ALPHABET[0];
+      let encoded = '';
+      while (num > 0) {
+        const remainder = num % 58;
+        num = Math.floor(num / 58);
+        encoded = BASE58_ALPHABET[remainder] + encoded;
+      }
+      return encoded;
+    }
+
+    function encode(epochSeconds) {
+      if (epochSeconds < 0 || epochSeconds > T_REF_UNIX) {
+        throw new Error("Invalid timestamp");
+      }
+      const delta = T_REF_UNIX - epochSeconds;
+      const base58 = toBase58(delta);
+      return 'tt' + base58.padStart(BASE58_ID_LENGTH, PADDING_CHAR);
+    }
+
+    function update() {
+      const now = Math.floor(Date.now() / 1000);
+      const id = encode(now);
+      const date = new Date(now * 1000);
+      const pad = n => n.toString().padStart(2, '0');
+      const formatted = `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+
+      document.getElementById('twoTwoId').textContent = id;
+      document.getElementById('timestamp').textContent = formatted;
+    }
+
+    document.getElementById('twoTwoId').addEventListener('click', () => {
+      const text = document.getElementById('twoTwoId').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const indicator = document.getElementById('copiedIndicator');
+        indicator.textContent = 'Copied!';
+        setTimeout(() => {
+          indicator.textContent = '';
+        }, 1200);
+      }).catch(err => {
+        console.error('Clipboard write failed', err);
+      });
+    });
+
+    update();
+    setInterval(update, 1000);
+  </script>
+</body>
+</html>
